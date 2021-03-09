@@ -1,0 +1,35 @@
+- hosts: localhost
+  vars:
+    helm_chart_url: "https://helm.cilium.io/"
+  tasks:
+    - name: Add helm repo
+      community.kubernetes.helm_repository:
+        name: cilium
+        repo_url: "{{ helm_chart_url }}"
+    - name: Install Cilium Chart
+      community.kubernetes.helm:
+        name: cilium
+        namespace: cilium
+        chart_ref: cilium/cilium
+        chart_version: 1.9.4
+        values:
+          nodeinit:
+            enabled: true
+            reconfigureKubelet: true
+            removeCbrBridge: true
+          cni:
+            binPath: /home/kubernetes/bin 
+          gke:
+            enabled: true
+          ipam:
+            mode: kubernetes
+          nativeRoutingCIDR: 10.20.0.0/14
+          hubble:
+            listenAddress: ":4244"
+            relay.enabled: true
+            ui.enabled: true
+
+    - name: Gather information about cilium-server
+      community.kubernetes.helm_info:
+        name: cilium
+        release_namespace: cilium
